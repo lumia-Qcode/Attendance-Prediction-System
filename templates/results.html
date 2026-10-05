@@ -1,40 +1,64 @@
 {% extends "base.html" %}
 {% block title %}Results · Attendance{% endblock %}
 {% block content %}
+<ol class="steps"><li class="done">Upload</li><li class="done">Review</li><li class="done">Settings</li><li class="on">Results</li></ol>
+
 <section class="card">
-  <h1>4 · Predicted holidays</h1>
-  <div class="metrics">
-    <div><b>{{ rs.n_days }}</b><span>class days observed (to {{ rs.observed_end }})</span></div>
-    <div><b>{{ rs.n_students }}</b><span>active students used</span></div>
-    <div><b>{{ rs.n_dropped }}</b><span>dropped students ignored</span></div>
-    <div><b>{{ rs.n_future }}</b><span>working days left ({{ rs.future_first }} → {{ rs.future_last }})</span></div>
+  <div class="row between">
+    <div>
+      <h1>Predicted holidays</h1>
+      <p class="muted">Expected absences per student from {{ rs.future_first }} to {{ end }}.</p>
+    </div>
+    <div class="actions">
+      <a class="btn primary" href="{{ url_for('download', jid=jid, kind='predictions') }}">Download predictions.csv</a>
+      <a class="btn primary" href="{{ url_for('download', jid=jid, kind='attendance') }}">Download attendance.csv</a>
+      <a class="btn" href="{{ url_for('review', jid=jid) }}">Edit &amp; re-predict</a>
+      <a class="btn" href="{{ url_for('index') }}">New upload</a>
+    </div>
   </div>
-  <p>
-    <a class="btn primary" href="{{ url_for('download', jid=jid, kind='attendance') }}">⬇ attendance.csv</a>
-    <a class="btn primary" href="{{ url_for('download', jid=jid, kind='predictions') }}">⬇ predictions.csv</a>
-    <a class="btn" href="{{ url_for('review', jid=jid) }}">← Edit &amp; re-predict</a>
-    <a class="btn" href="{{ url_for('index') }}">New upload</a>
-  </p>
+  <div class="metrics">
+    <div><b>{{ rs.n_days }}</b><span>Class days observed (to {{ rs.observed_end }})</span></div>
+    <div><b>{{ rs.n_students }}</b><span>Active students used</span></div>
+    <div><b>{{ rs.n_dropped }}</b><span>Dropped students ignored</span></div>
+    <div><b>{{ rs.n_future }}</b><span>Working days left ({{ rs.future_first }} → {{ rs.future_last }})</span></div>
+  </div>
 </section>
 
 <section class="card">
-  <p class="muted">“Predicted holidays” = expected absences between {{ rs.future_first }} and {{ end }}. Range = 80 % interval from simulation.</p>
+  {% if n_unnamed %}
+  <p class="warn">{{ n_unnamed }} student(s) have no name yet, so their handwriting from the register is shown instead.
+    Go to <a href="{{ url_for('review', jid=jid) }}">Edit &amp; re-predict</a>, type the names, and predict again.</p>
+  {% endif %}
   <div class="scroll">
   <table class="res">
-    <thead><tr><th>#</th><th>Student</th><th>Absent so far</th><th>Predicted holidays</th><th></th><th>Range</th><th>P(≥3)</th><th>Risk</th></tr></thead>
+    <thead><tr>
+      <th>#</th><th>Student</th><th class="num">Absent so far</th><th class="num">Predicted holidays</th><th></th>
+      <th class="num" title="80% of simulated futures fall inside this range">Likely range</th>
+      <th class="num" title="Chance the student takes 3 or more holidays">Chance of 3+ holidays</th><th>Risk</th>
+    </tr></thead>
     <tbody>
     {% for r in rs.pred %}
       <tr>
-        <td>{{ loop.index }}</td><td>{{ r.student }}</td><td>{{ r.observed_absences|int }}</td>
-        <td><b>{{ '%.1f' % r.predicted_holidays }}</b></td>
+        <td class="muted">{{ loop.index }}</td>
+        <td class="stu">
+          <b>{{ r.student }}</b>
+          {% if r.crop %}<img class="crop" src="{{ r.crop }}" alt="handwritten name">{% endif %}
+        </td>
+        <td class="num">{{ r.observed_absences|int }}</td>
+        <td class="num"><b>{{ '%.1f' % r.predicted_holidays }}</b></td>
         <td class="barcell"><div class="bar {{ r.risk }}" style="width: {{ r.width }}%"></div></td>
-        <td>{{ r.low_10pct }} – {{ r.high_90pct }}</td><td>{{ '%.0f' % (100 * r.prob_3plus_holidays) }}%</td>
+        <td class="num">{{ r.low_10pct }} – {{ r.high_90pct }}</td>
+        <td class="num">{{ '%.0f' % (100 * r.prob_3plus_holidays) }}%</td>
         <td><span class="pill {{ r.risk }}">{{ r.risk }}</span></td>
       </tr>
     {% endfor %}
     </tbody>
   </table>
   </div>
+  <dl class="legend">
+    <dt>Likely range</dt><dd>The model simulates the remaining days 4,000 times. 80% of the simulations gave a number of holidays inside this range (10th to 90th percentile). A wide range means the model is less sure.</dd>
+    <dt>Chance of 3+ holidays</dt><dd>The share of those simulations in which the student took 3 or more holidays. 100% means almost certain.</dd>
+  </dl>
 </section>
 
 <section class="card">

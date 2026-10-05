@@ -171,7 +171,7 @@ def create_app() -> Flask:
             return fail("This upload has expired. Please upload the sheet again.", 404, url_for("index"))
         back = url_for("review", jid=jid)
         f = request.form
-        tables, used = [], set()
+        tables, used, crop_map = [], set(), {}
         for gi, g in enumerate(job["groups"]):
             v = f.get(f"month_{gi}", "skip")
             if v == "skip":
@@ -185,6 +185,9 @@ def create_app() -> Flask:
             used.add((y, mo))
             res = g["res"]
             names = unique_names([f.get(f"name_{gi}_{r}", "").strip() or f"Student {r + 1}" for r in range(res.n_rows)])
+            for r, n in enumerate(names):                    # unnamed rows: remember the handwriting crop to show in results
+                if not f.get(f"name_{gi}_{r}", "").strip() and n not in crop_map:
+                    crop_map[n] = (gi, r)
             status = ["dropped" if f.get(f"status_{gi}_{r}") == "dropped" else "active" for r in range(res.n_rows)]
             pres = np.zeros((res.n_rows, 31), bool)
             for r in range(res.n_rows):
@@ -240,7 +243,7 @@ def create_app() -> Flask:
             "n_dropped": int((full["status"] == "dropped").sum()), "observed_end": observed_end,
             "prior": float(model.prior_mean),
             "weekday": ", ".join(f"{WEEKDAYS[i]} {model.weekday_factor[i]:.2f}" for i in range(7) if i not in off),
-            "bt": bt, "pred": pred.to_dict("records")}
+            "bt": bt, "pred": pred.to_dict("records"), "crops": crop_map}
         jobs.save(jid, job)
         return redirect(url_for("results", jid=jid))
 
@@ -254,7 +257,10 @@ def create_app() -> Flask:
         top = max([r["predicted_holidays"] for r in rs["pred"]] + [1])
         for r in rs["pred"]:
             r["width"] = round(100 * r["predicted_holidays"] / top)
-        return render_template("results.html", jid=jid, rs=rs, end=job["end"])
+            gr = rs.get("crops", {}).get(r["student"])
+            r["crop"] = url_for("crop", jid=jid, gi=gr[0], r=gr[1]) if gr else None
+        n_unnamed = sum(1 for r in rs["pred"] if r["crop"])
+        return render_template("results.html", jid=jid, rs=rs, end=job["end"], n_unnamed=n_unnamed)
 
     @app.get("/job/<jid>/download/<kind>.csv")
     def download(jid, kind):
