@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card narrow">
+  <h1>1 · Upload the attendance register</h1>
+  <p class="muted">Photo, scan or PDF of the handwritten register. Photograph <b>both pages together</b> (names + days 1-12 on
+    the left, days 13-31 on the right). Several photos of the same page are fine - they are merged by majority vote.</p>
+  {% if error %}<p class="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="{{ url_for('upload') }}" enctype="multipart/form-data"
+        data-busy="Reading the sheets… this can take up to a minute for large PDFs.">
+    <label class="field">Register file(s)
+      <input type="file" name="files" accept=".pdf,.jpg,.jpeg,.png" multiple required>
+    </label>
+    <div class="row">
+      <label class="field">Session start <input type="date" name="start" value="{{ start }}" required></label>
+      <label class="field">Session end <input type="date" name="end" value="{{ end }}" required></label>
+    </div>
+    <fieldset class="field"><legend>Photo layout</legend>
+      {% for v, t in [("auto","Auto"),("spread","Both pages in one photo"),("single","One page per photo")] %}
+      <label class="inline"><input type="radio" name="layout" value="{{ v }}" {{ 'checked' if layout == v }}> {{ t }}</label>
+      {% endfor %}
+    </fieldset>
+    <button class="btn primary" type="submit">Read the sheet →</button>
+  </form>
+</section>
+{% endblock %}

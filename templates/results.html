@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Results · Attendance{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>4 · Predicted holidays</h1>
+  <div class="metrics">
+    <div><b>{{ rs.n_days }}</b><span>class days observed (to {{ rs.observed_end }})</span></div>
+    <div><b>{{ rs.n_students }}</b><span>active students used</span></div>
+    <div><b>{{ rs.n_dropped }}</b><span>dropped students ignored</span></div>
+    <div><b>{{ rs.n_future }}</b><span>working days left ({{ rs.future_first }} → {{ rs.future_last }})</span></div>
+  </div>
+  <p>
+    <a class="btn primary" href="{{ url_for('download', jid=jid, kind='attendance') }}">⬇ attendance.csv</a>
+    <a class="btn primary" href="{{ url_for('download', jid=jid, kind='predictions') }}">⬇ predictions.csv</a>
+    <a class="btn" href="{{ url_for('review', jid=jid) }}">← Edit &amp; re-predict</a>
+    <a class="btn" href="{{ url_for('index') }}">New upload</a>
+  </p>
+</section>
+
+<section class="card">
+  <p class="muted">“Predicted holidays” = expected absences between {{ rs.future_first }} and {{ end }}. Range = 80 % interval from simulation.</p>
+  <div class="scroll">
+  <table class="res">
+    <thead><tr><th>#</th><th>Student</th><th>Absent so far</th><th>Predicted holidays</th><th></th><th>Range</th><th>P(≥3)</th><th>Risk</th></tr></thead>
+    <tbody>
+    {% for r in rs.pred %}
+      <tr>
+        <td>{{ loop.index }}</td><td>{{ r.student }}</td><td>{{ r.observed_absences|int }}</td>
+        <td><b>{{ '%.1f' % r.predicted_holidays }}</b></td>
+        <td class="barcell"><div class="bar {{ r.risk }}" style="width: {{ r.width }}%"></div></td>
+        <td>{{ r.low_10pct }} – {{ r.high_90pct }}</td><td>{{ '%.0f' % (100 * r.prob_3plus_holidays) }}%</td>
+        <td><span class="pill {{ r.risk }}">{{ r.risk }}</span></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section class="card">
+  <h2>How good is the model?</h2>
+  {% if rs.bt %}
+  <p>Back-test on your own data: trained on the first {{ rs.bt.train_days }} class days, tested on the next {{ rs.bt.test_days }}
+     for {{ rs.bt.students }} students. Mean absolute error per student (days):
+     <b>model {{ '%.2f' % rs.bt.mae_model }}</b>, student's raw rate {{ '%.2f' % rs.bt.mae_raw_rate }},
+     class average {{ '%.2f' % rs.bt.mae_class_average }}.</p>
+  {% else %}<p>Not enough class days for a back-test (needs ≥ 8).</p>{% endif %}
+  <p class="muted">Class absence rate {{ '%.1f' % (100 * rs.prior) }}%. Day-of-week effect (1.0 = average): {{ rs.weekday }}.
+     More months of data → better predictions. Forecasts are statistical expectations, not certainties.</p>
+</section>
+{% endblock %}

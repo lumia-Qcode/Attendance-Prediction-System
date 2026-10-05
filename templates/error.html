@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card narrow">
+  <h1>Something needs fixing</h1>
+  <p class="alert">{{ message }}</p>
+  {% if back %}<a class="btn" href="{{ back }}">← Go back</a>{% else %}<a class="btn" href="javascript:history.back()">← Go back</a>{% endif %}
+</section>
+{% endblock %}

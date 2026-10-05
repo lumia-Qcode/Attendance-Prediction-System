@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Review · Attendance{% endblock %}
+{% block content %}
+<form method="post" action="{{ url_for('predict', jid=jid) }}"
+      data-busy="Fitting the model and predicting holidays…">
+  <section class="card">
+    <h1>2 · Review &amp; correct</h1>
+    <p class="muted">The reader marks a day <b>present only when it finds a P</b> (upper- or lower-case). Dots and blank cells are absent.
+      <span class="chip g">ticked = P</span> <span class="chip y">yellow = something written, not clearly a P (counted absent - tick it if it is a P)</span>
+      <span class="chip p">pink = off day</span> Handwritten names are only guessed by offline OCR - please type the correct names once.</p>
+    <details><summary>Pages found in the upload ({{ job.pages|length }})</summary>
+      <table class="mini"><tr><th>page</th><th>rows</th><th>layout</th><th>P marks</th><th>note</th></tr>
+      {% for p in job.pages %}<tr><td>{{ p.index }}</td><td>{{ p.rows }}</td><td>{{ p.layout }}</td><td>{{ p.marks }}</td><td>{{ p.note }}</td></tr>{% endfor %}</table>
+    </details>
+  </section>
+
+  {% for g in groups %}
+  <section class="card">
+    <div class="row between">
+      <h2>Sheet {{ loop.index }} <span class="muted">· pages {{ g.pages }} · {{ g.n_rows }} rows</span></h2>
+      <label class="field inline">Month
+        <select name="month_{{ g.i }}">
+          <option value="skip" {{ 'selected' if g.default == 'skip' }}>Skip this sheet</option>
+          {% for (y, m) in months %}{% set v = '%d-%02d' % (y, m) %}
+          <option value="{{ v }}" {{ 'selected' if g.default == v }}>{{ month_label(y, m) }}</option>{% endfor %}
+        </select>
+      </label>
+    </div>
+    <details><summary>What the reader saw (green = P · red = empty · yellow = doubtful · orange = crossed-out row · grey = off day)</summary>
+      <img class="overlay" loading="lazy" src="{{ url_for('overlay', jid=jid, gi=g.i) }}" alt="reader overlay">
+    </details>
+    {% if g.doubtful %}<p class="warn">Doubtful marks (counted absent): {{ g.doubtful|join(', ') }}</p>{% endif %}
+    {% if g.twin %}<p class="warn">This looks like another photo of a sheet above, so it is set to <b>Skip</b> to avoid counting the same month twice.</p>
+    {% elif g.default == 'skip' %}<p class="muted">Not assigned to a month by default (partial page or empty template). Choose a month above to use it, then type the names.</p>{% endif %}
+    <div class="scroll">
+      <table class="grid">
+        <thead><tr><th>#</th><th>Handwriting</th><th>Name</th><th>Status</th>
+          {% for d in range(31) %}<th class="{{ 'offc' if g.off[d] }}">{{ d + 1 }}</th>{% endfor %}</tr></thead>
+        <tbody>
+        {% for row in g.rows %}
+          <tr class="{{ 'dropped' if row.status == 'dropped' }}">
+            <td>{{ row.n }}</td>
+            <td><img class="crop" loading="lazy" src="{{ url_for('crop', jid=jid, gi=g.i, r=row.r) }}" alt=""></td>
+            <td><input class="nm" type="text" name="name_{{ g.i }}_{{ row.r }}" value="{{ row.name }}" placeholder="Student {{ row.n }}"></td>
+            <td><select class="st" name="status_{{ g.i }}_{{ row.r }}">
+              <option value="active" {{ 'selected' if row.status == 'active' }}>active</option>
+              <option value="dropped" {{ 'selected' if row.status == 'dropped' }}>dropped</option></select></td>
+            {% for d in range(31) %}
+            <td class="cell {{ 'offc' if g.off[d] }} {{ 'unc' if row.unc[d] }}">
+              <input type="checkbox" name="p_{{ g.i }}_{{ row.r }}_{{ d + 1 }}" {{ 'checked' if row.marks[d] }}></td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endfor %}
+
+  <section class="card">
+    <h2>3 · Prediction settings</h2>
+    <fieldset class="field"><legend>Weekly off days (auto-detected from the pink columns)</legend>
+      {% for i in range(7) %}<label class="inline"><input type="checkbox" name="off" value="{{ i }}" {{ 'checked' if i in off_default }}> {{ WEEKDAYS[i] }}</label>{% endfor %}
+    </fieldset>
+    <div class="row">
+      <label class="field">Extra holidays / closures in the rest of the session (YYYY-MM-DD, one per line)
+        <textarea name="holidays" rows="3" placeholder="2026-11-09"></textarea></label>
+      <label class="field">Recency half-life (days) - smaller = recent attendance matters more
+        <input type="number" name="halflife" value="14" min="7" max="60"></label>
+    </div>
+    <p class="muted">Only <b>active</b> students are used for learning and prediction. Rows marked <i>dropped</i> are ignored.</p>
+    <button class="btn primary" type="submit">🔮 Generate CSV &amp; predict holidays</button>
+    <a class="btn" href="{{ url_for('index') }}">Start over</a>
+  </section>
+</form>
+{% endblock %}

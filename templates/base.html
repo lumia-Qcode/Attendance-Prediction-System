@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Attendance Digitiser{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="{{ url_for('index') }}">Attendance Digitiser &amp; Holiday Predictor</a>
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+  <div id="busy" class="busy" hidden><div class="spinner"></div><p id="busyMsg">Working…</p></div>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

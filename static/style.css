@@ -1,0 +1,43 @@
+:root{--bg:#f5f6fa;--card:#fff;--ink:#1c2230;--muted:#6b7385;--line:#e2e5ee;--accent:#3b5bdb;--ok:#2f9e44;--warn:#f08c00;--bad:#e03131;--pink:#fde3ef}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+.top{display:flex;gap:16px;align-items:baseline;justify-content:space-between;padding:12px 24px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.brand{font-weight:700;color:var(--ink);text-decoration:none}
+main{max-width:1400px;margin:0 auto;padding:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin-bottom:18px}
+.card.narrow{max-width:720px;margin:24px auto}
+h1{font-size:1.35rem;margin:0 0 8px} h2{font-size:1.1rem;margin:0 0 8px}
+.muted{color:var(--muted)} .row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}.row.between{justify-content:space-between;align-items:center}
+.field{display:flex;flex-direction:column;gap:4px;margin:12px 0;font-weight:600;border:0;padding:0}
+.field.inline,.inline{flex-direction:row;align-items:center;gap:6px;font-weight:500;margin:0 12px 0 0}
+input[type=text],input[type=date],input[type=number],input[type=file],select,textarea{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff}
+textarea{min-width:320px}
+.btn{display:inline-block;font:inherit;font-weight:600;padding:9px 16px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--ink);text-decoration:none;cursor:pointer;margin-right:8px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn:hover{filter:brightness(.96)}
+.alert{background:#fff0f0;border:1px solid #ffc9c9;color:#a61e1e;padding:10px 14px;border-radius:8px}
+.warn{background:#fff9db;border:1px solid #ffe066;padding:8px 12px;border-radius:8px}
+.chip{display:inline-block;padding:1px 8px;border-radius:99px;font-size:.82rem;margin-right:4px}
+.chip.g{background:#d3f9d8}.chip.y{background:#fff3bf}.chip.p{background:var(--pink)}
+.scroll{overflow:auto;max-height:78vh;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%}
+table.grid th,table.grid td{border:1px solid var(--line);padding:2px 4px;text-align:center;white-space:nowrap}
+table.grid thead th{position:sticky;top:0;background:#eef1f8;z-index:2;font-size:.8rem}
+table.grid td:nth-child(3){min-width:210px;text-align:left}
+.nm{width:100%}.crop{height:30px;max-width:230px;display:block}
+.cell input{width:17px;height:17px;cursor:pointer}
+.offc{background:var(--pink)} .cell.unc{background:#fff3bf;outline:2px solid #fcc419;outline-offset:-2px}
+tr.dropped td{background:#f1f3f5;color:#868e96} tr.dropped .cell input{opacity:.35}
+.overlay{max-width:100%;border:1px solid var(--line);border-radius:8px;margin-top:8px}
+details summary{cursor:pointer;color:var(--accent);margin:6px 0}
+.mini td,.mini th{border:1px solid var(--line);padding:2px 8px;font-size:.85rem}
+.metrics{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 16px}
+.metrics div{flex:1 1 180px;background:#f8f9fc;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.metrics b{display:block;font-size:1.6rem}.metrics span{color:var(--muted);font-size:.85rem}
+table.res th,table.res td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:left}
+table.res thead th{position:sticky;top:0;background:#eef1f8}
+.barcell{width:26%}.bar{height:12px;border-radius:6px;background:var(--ok)}.bar.medium{background:var(--warn)}.bar.high{background:var(--bad)}
+.pill{padding:2px 10px;border-radius:99px;font-size:.8rem;font-weight:600;background:#d3f9d8}.pill.medium{background:#ffec99}.pill.high{background:#ffc9c9}
+.busy{position:fixed;inset:0;background:rgba(255,255,255,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50}
+.busy[hidden]{display:none}
+.spinner{width:46px;height:46px;border:5px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:s 0.9s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
